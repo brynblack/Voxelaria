@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION "3.1")
+set(CMAKE_CXX_STANDARD "14")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_VULKAN_STATIC OFF CACHE BOOL "" FORCE)
+set(USE_MSVC_RUNTIME_LIBRARY_DLL OFF CACHE BOOL "" FORCE)
+
+project("CubicSpeed" VERSION "1.0.0.0" LANGUAGES "CXX" DESCRIPTION "An OpenGL game programmed in C++")
+
+add_subdirectory("glfw-master")
+add_subdirectory("src")

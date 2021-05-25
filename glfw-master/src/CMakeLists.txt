@@ -37,7 +37,7 @@ elseif (_GLFW_OSMESA)
 endif()
 
 if (_GLFW_X11 OR _GLFW_WAYLAND)
-    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_sources(glfw PRIVATE linux_joystick.h linux_joystick.c)
     else()
         target_sources(glfw PRIVATE null_joystick.h null_joystick.c)
@@ -50,40 +50,37 @@ if (_GLFW_WAYLAND)
     pkg_get_variable(WAYLAND_PROTOCOLS_BASE wayland-protocols pkgdatadir)
 
     macro(wayland_generate protocol_file output_file)
-          add_custom_command(OUTPUT ${output_file}.h
-              COMMAND ${WAYLAND_SCANNER_EXECUTABLE} client-header
-              < ${protocol_file} > ${output_file}.h
-              DEPENDS ${protocol_file})
-          list(APPEND GLFW_WAYLAND_PROTOCOL_SOURCES ${output_file}.h)
+        add_custom_command(OUTPUT "${output_file}.h"
+            COMMAND "${WAYLAND_SCANNER_EXECUTABLE}" client-header "${protocol_file}" "${output_file}.h"
+            DEPENDS "${protocol_file}"
+            VERBATIM)
 
-          add_custom_command(OUTPUT ${output_file}.c
-              COMMAND ${WAYLAND_SCANNER_EXECUTABLE} private-code
-              < ${protocol_file} > ${output_file}.c
-              DEPENDS ${protocol_file})
-          list(APPEND GLFW_WAYLAND_PROTOCOL_SOURCES ${output_file}.c)
+        add_custom_command(OUTPUT "${output_file}.c"
+            COMMAND "${WAYLAND_SCANNER_EXECUTABLE}" private-code "${protocol_file}" "${output_file}.c"
+            DEPENDS "${protocol_file}"
+            VERBATIM)
+
+        target_sources(glfw PRIVATE "${output_file}.h" "${output_file}.c")
     endmacro()
 
-    set(GLFW_WAYLAND_PROTOCOL_SOURCES)
     wayland_generate(
-        ${WAYLAND_PROTOCOLS_BASE}/stable/xdg-shell/xdg-shell.xml
-        ${CMAKE_BINARY_DIR}/src/wayland-xdg-shell-client-protocol)
+        "${WAYLAND_PROTOCOLS_BASE}/stable/xdg-shell/xdg-shell.xml"
+        "${GLFW_BINARY_DIR}/src/wayland-xdg-shell-client-protocol")
     wayland_generate(
-        ${WAYLAND_PROTOCOLS_BASE}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-        ${CMAKE_BINARY_DIR}/src/wayland-xdg-decoration-client-protocol)
+        "${WAYLAND_PROTOCOLS_BASE}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml"
+        "${GLFW_BINARY_DIR}/src/wayland-xdg-decoration-client-protocol")
     wayland_generate(
-        ${WAYLAND_PROTOCOLS_BASE}/stable/viewporter/viewporter.xml
-        ${CMAKE_BINARY_DIR}/src/wayland-viewporter-client-protocol)
+        "${WAYLAND_PROTOCOLS_BASE}/stable/viewporter/viewporter.xml"
+        "${GLFW_BINARY_DIR}/src/wayland-viewporter-client-protocol")
     wayland_generate(
-        ${WAYLAND_PROTOCOLS_BASE}/unstable/relative-pointer/relative-pointer-unstable-v1.xml
-        ${CMAKE_BINARY_DIR}/src/wayland-relative-pointer-unstable-v1-client-protocol)
+        "${WAYLAND_PROTOCOLS_BASE}/unstable/relative-pointer/relative-pointer-unstable-v1.xml"
+        "${GLFW_BINARY_DIR}/src/wayland-relative-pointer-unstable-v1-client-protocol")
     wayland_generate(
-        ${WAYLAND_PROTOCOLS_BASE}/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
-        ${CMAKE_BINARY_DIR}/src/wayland-pointer-constraints-unstable-v1-client-protocol)
+        "${WAYLAND_PROTOCOLS_BASE}/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml"
+        "${GLFW_BINARY_DIR}/src/wayland-pointer-constraints-unstable-v1-client-protocol")
     wayland_generate(
-        ${WAYLAND_PROTOCOLS_BASE}/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
-        ${CMAKE_BINARY_DIR}/src/wayland-idle-inhibit-unstable-v1-client-protocol)
-
-    target_sources(glfw PRIVATE ${GLFW_WAYLAND_PROTOCOL_SOURCES})
+        "${WAYLAND_PROTOCOLS_BASE}/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml"
+        "${GLFW_BINARY_DIR}/src/wayland-idle-inhibit-unstable-v1-client-protocol")
 endif()
 
 if (WIN32 AND BUILD_SHARED_LIBS)
@@ -115,31 +112,36 @@ target_include_directories(glfw PRIVATE
 target_link_libraries(glfw PRIVATE Threads::Threads ${glfw_LIBRARIES})
 
 # Workaround for CMake not knowing about .m files before version 3.16
-if (APPLE)
+if ("${CMAKE_VERSION}" VERSION_LESS "3.16" AND APPLE)
     set_source_files_properties(cocoa_init.m cocoa_joystick.m cocoa_monitor.m
                                 cocoa_window.m nsgl_context.m PROPERTIES
                                 LANGUAGE C)
 endif()
 
-if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR
-    "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR
-    "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
-
-    # Make GCC and Clang warn about declarations that VS 2010 and 2012 won't
-    # accept for all source files that VS will build
+# Make GCC warn about declarations that VS 2010 and 2012 won't accept for all
+# source files that VS will build (Clang ignores this because we set -std=c99)
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set_source_files_properties(context.c init.c input.c monitor.c vulkan.c
                                 window.c win32_init.c win32_joystick.c
                                 win32_monitor.c win32_time.c win32_thread.c
                                 win32_window.c wgl_context.c egl_context.c
                                 osmesa_context.c PROPERTIES
                                 COMPILE_FLAGS -Wdeclaration-after-statement)
+endif()
 
-    # Enable a reasonable set of warnings (no, -Wextra is not reasonable)
+# Enable a reasonable set of warnings
+# NOTE: The order matters here, Clang-CL matches both MSVC and Clang
+if (MSVC)
+    target_compile_options(glfw PRIVATE "/W3")
+elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
+        CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
+        CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+
     target_compile_options(glfw PRIVATE "-Wall")
 endif()
 
-if (WIN32)
-    target_compile_definitions(glfw PRIVATE _UNICODE)
+if (_GLFW_WIN32)
+    target_compile_definitions(glfw PRIVATE UNICODE _UNICODE)
 endif()
 
 # HACK: When building on MinGW, WINVER and UNICODE need to be defined before
@@ -147,7 +149,7 @@ endif()
 # win32_platform.h.  We define them here until a saner solution can be found
 # NOTE: MinGW-w64 and Visual C++ do /not/ need this hack.
 if (MINGW)
-    target_compile_definitions(glfw PRIVATE UNICODE WINVER=0x0501)
+    target_compile_definitions(glfw PRIVATE WINVER=0x0501)
 endif()
 
 # Workaround for legacy MinGW not providing XInput and DirectInput
@@ -160,8 +162,8 @@ if (MINGW)
     endif()
 endif()
 
-# Workaround for VS deprecating parts of the standard library
-if (MSVC)
+# Workaround for the MS CRT deprecating parts of the standard library
+if (MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
     target_compile_definitions(glfw PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
@@ -197,9 +199,6 @@ if (BUILD_SHARED_LIBS)
         endif()
 
         target_compile_definitions(glfw INTERFACE GLFW_DLL)
-    elseif (APPLE)
-        set_target_properties(glfw PROPERTIES
-                              INSTALL_NAME_DIR "${CMAKE_INSTALL_LIBDIR}")
     endif()
 
     if (MINGW)
@@ -240,7 +239,7 @@ endif()
 if (GLFW_INSTALL)
     install(TARGETS glfw
             EXPORT glfwTargets
-            RUNTIME DESTINATION "bin"
+            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
             LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()

@@ -127,6 +127,8 @@ int main()
 {
     std::chrono::high_resolution_clock::time_point t1, t2; // Define time point variables
 
+    GLwindow.title = "CubicSpeed"; // Set window title
+
     // Init glfw
     if (!glfwInit())
         return -1;
@@ -134,7 +136,7 @@ int main()
     mode = (GLFWvidmode*)glfwGetVideoMode(monitor);
     GLwindow.width = mode->width;
     GLwindow.height = mode->height;
-    window = glfwCreateWindow(GLwindow.width, GLwindow.height, "CubicSpeed", monitor, nullptr);
+    window = glfwCreateWindow(GLwindow.width, GLwindow.height, GLwindow.title, monitor, nullptr);
     if (!window)
     {
         glfwTerminate();

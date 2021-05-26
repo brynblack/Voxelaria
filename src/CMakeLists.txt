@@ -6,4 +6,4 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
 add_executable("cubicspeed" "cubicspeed.cpp")
-target_link_libraries("cubicspeed" glew32s;glfw3;opengl32;user32;gdi32;shell32)
+target_link_libraries("cubicspeed" glew32;glfw3;opengl32;user32;gdi32;shell32)

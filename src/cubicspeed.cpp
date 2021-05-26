@@ -41,7 +41,11 @@ float frameDelta;
 // Define element buffer array
 unsigned int indicies[] = {
         0, 1, 2,
-        2, 3, 0
+        2, 3, 0,
+        4, 0, 3,
+        3, 5, 4,
+        1, 0, 4,
+        4, 6, 1
 };
 
 // Define buffer variables
@@ -205,7 +209,7 @@ int main()
     camera.set_speed(0.01f);
 
     cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    cameraUp = glm::vec3(0.0f, 1.0f,  0.0f);
+    cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     // Declare matrices
     glm::mat4 Model = glm::mat4(1.0f);
@@ -232,9 +236,13 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_D))
             camera.xyz += glm::normalize(glm::cross(cameraFront, cameraUp)) * camera.speed * frameDelta;
         if (glfwGetKey(window, GLFW_KEY_S))
-            camera.xyz -= camera.speed * cameraFront * frameDelta;
+            camera.xyz -= camera.speed * cameraFront * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
         if (glfwGetKey(window, GLFW_KEY_W))
-            camera.xyz += camera.speed * cameraFront * frameDelta;
+            camera.xyz += camera.speed * cameraFront * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+            camera.xyz -= camera.speed * cameraUp * frameDelta;
+        if (glfwGetKey(window, GLFW_KEY_SPACE))
+            camera.xyz += camera.speed * cameraUp * frameDelta;
         if (glfwGetKey(window, GLFW_KEY_ESCAPE))
         {
             glfwTerminate();
@@ -242,11 +250,14 @@ int main()
         }
 
         // Define vertices
-        float vertices[24] = {
-                0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-                0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-                -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-                -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f
+        float vertices[] = {
+                0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 0
+                0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 1
+                -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 2
+                -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, // 3
+                0.5f, 0.5f, -1.0f, 0.0f, 1.0f, 0.0f, // 4
+                -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, // 5
+                0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f // 6
         };
 
         View = glm::lookAt(camera.xyz, camera.xyz + cameraFront, cameraUp);
@@ -258,13 +269,13 @@ int main()
 
         // Bind buffers and set buffer data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 24 * sizeof(float), vertices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 42 * sizeof(float), vertices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indicies, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 18 * sizeof(unsigned int), indicies, GL_DYNAMIC_DRAW);
 
         // Clear buffers and draw element buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, nullptr);
 
         // Flush OpenGl and swap buffers
         glFlush();

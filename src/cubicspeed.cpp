@@ -102,9 +102,13 @@ void mouse_callback(GLFWwindow* wwindow, double xpos, double ypos)
 
     // Lock camera angles
     if(camera.pitch > 89.0f)
+    {
         camera.pitch = 89.0f;
+    }
     if(camera.pitch < -89.0f)
+    {
         camera.pitch = -89.0f;
+    }
 
     // Set camera direction based upon yaw and pitch
     camera.direction.x = cos(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));

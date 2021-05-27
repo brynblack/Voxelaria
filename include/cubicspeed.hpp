@@ -1,49 +1,74 @@
 #ifndef cubicspeedlibs
 #define cubicspeedlibs
 #include <glm/ext/vector_float3.hpp>
-namespace cubicSpeed
-{
-    class entity {
+namespace cubicSpeed {
+    class camera {
     public:
         glm::vec3 xyz, front, up, direction;
         double pitch, yaw;
-        float speed;
+        float speed, fov;
     public:
-        void set_xyz(glm::vec3);
-        void set_pitch(double);
-        void set_yaw(double);
-        void set_front(glm::vec3);
-        void set_up(glm::vec3);
-        void set_direction(glm::vec3);
-        void set_speed(float);
+        void set_xyz(glm::vec3 xyz)
+        {
+            this->xyz = xyz;
+        };
+        void set_pitch(double pitch)
+        {
+            this->pitch = pitch;
+        };
+
+        void set_yaw(double yaw)
+        {
+            this->yaw = yaw;
+        };
+
+        void set_front(glm::vec3 front)
+        {
+            this->front = front;
+        };
+
+        void set_up(glm::vec3 up)
+        {
+            this->up = up;
+        };
+
+        void set_direction(glm::vec3 direction)
+        {
+            this->direction = direction;
+        };
+
+        void set_speed(float speed)
+        {
+            this->speed = speed;
+        };
+        void set_fov(float fov)
+        {
+            this->fov = fov;
+        };
     };
-    void entity::set_xyz(glm::vec3 XYZ)
-    {
-        xyz = XYZ;
-    }
-    void entity::set_pitch(double p)
-    {
-        pitch = p;
-    }
-    void entity::set_yaw(double y)
-    {
-        yaw = y;
-    }
-    void entity::set_front(glm::vec3 f)
-    {
-        front = f;
-    }
-    void entity::set_up(glm::vec3 u)
-    {
-        up = u;
-    }
-    void entity::set_direction(glm::vec3 d)
-    {
-        direction = d;
-    }
-    void entity::set_speed(float s)
-    {
-        speed = s;
-    }
+    class window {
+    public:
+        int width, height;
+        const char *title;
+    public:
+        void set_width(int width)
+        {
+            this->width = width;
+        };
+        void set_height(int height)
+        {
+            this->height = height;
+        };
+        void set_title(const char* title)
+        {
+            this->title = title;
+        };
+    };
+    class mouse {
+    public:
+        double lastX, lastY, xoffset, yoffset;
+        float sensitivity;
+        bool firstMouse;
+    };
 }
 #endif

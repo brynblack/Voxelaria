@@ -139,7 +139,7 @@ int main()
 
     // Set camera settings
     camera.set_fov(90.0f); // Set camera FOV
-    camera.set_xyz(glm::vec3(0.0f, 0.0f,  3.0f)); // Set initial camera position
+    camera.set_xyz(glm::vec3(0.5f, 0.5f,  3.0f)); // Set initial camera position
     camera.set_pitch(0.0); // Set initial camera pitch
     camera.set_yaw(-90.0); // Set initial camera yaw
     camera.set_speed(0.01f); // Set camera speed
@@ -275,14 +275,14 @@ int main()
 
         // Define vertex positions and colors
         float vertices[48] = {
-                0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 0
-                0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 1
-                -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 2
-                -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, // 3
-                0.5f, 0.5f, -1.0f, 0.0f, 1.0f, 0.0f, // 4
-                -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, // 5
-                0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, // 6
-                -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f // 7
+                1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 0
+                1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // 1
+                0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // 2
+                0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 3
+                1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // 4
+                0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, // 5
+                1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, // 6
+                0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f // 7
         };
 
         View = glm::lookAt(camera.xyz, camera.xyz + camera.front, camera.up); // Set view matrix

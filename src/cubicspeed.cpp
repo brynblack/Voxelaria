@@ -297,6 +297,8 @@ int main()
         glFlush(); // Flush OpenGl
         glfwSwapBuffers(window); // Swap buffers
 
+        glfwSwapInterval(0); // Disable vsync
+
         t2 = std::chrono::high_resolution_clock::now(); // Get second time point
     }
     // Terminate program if main loop is exited

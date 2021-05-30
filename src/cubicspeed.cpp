@@ -301,7 +301,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr); // Draw elements (the amount of integers in the element array)
 
-        glFlush(); // Flush OpenGl
         glfwSwapBuffers(window); // Swap buffers
 
         t2 = std::chrono::high_resolution_clock::now(); // Get second time point

@@ -157,7 +157,7 @@ int main()
     // Generate buffers and define vertex attributes
 
     // Define element buffer array
-    unsigned int indicies[] = {
+    unsigned int indicies[36] = {
             0, 1, 2,
             2, 3, 0,
             4, 0, 3,
@@ -274,7 +274,7 @@ int main()
         }
 
         // Define vertex positions and colors
-        float vertices[] = {
+        float vertices[48] = {
                 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // 0
                 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 1
                 -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // 2

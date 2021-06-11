@@ -147,7 +147,7 @@ int main()
     camera.set_pitch(0.0); // Set initial camera pitch
     camera.set_yaw(-90.0); // Set initial camera yaw
     camera.set_speed(0.01f); // Set camera speed
-    camera.set_camerasmoothing(0.01f); // Set camera smoothing value
+    camera.set_smoothing(0.01f); // Set camera smoothing value
     camera.front = glm::vec3(0.0f, 0.0f, -1.0f); // Set camera front
     camera.up = glm::vec3(0.0f, 1.0f, 0.0f); // Set camera up
 
@@ -280,7 +280,7 @@ int main()
 
         // Set camera position and velocity
         camera.xyz += camera.velocity * camera.speed * frameDelta;
-        camera.velocity -= camera.velocity * camera.camerasmoothing * frameDelta;
+        camera.velocity -= camera.velocity * camera.smoothing * frameDelta;
 
         // Define vertex positions and colors
         float vertices[48] = {

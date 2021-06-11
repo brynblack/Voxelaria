@@ -147,6 +147,7 @@ int main()
     camera.set_pitch(0.0); // Set initial camera pitch
     camera.set_yaw(-90.0); // Set initial camera yaw
     camera.set_speed(0.01f); // Set camera speed
+    camera.set_camerasmoothing(0.01f); // Set camera smoothing value
     camera.front = glm::vec3(0.0f, 0.0f, -1.0f); // Set camera front
     camera.up = glm::vec3(0.0f, 1.0f, 0.0f); // Set camera up
 
@@ -250,32 +251,36 @@ int main()
         glfwPollEvents(); // Tell GLFW to poll input events
         if (glfwGetKey(window, GLFW_KEY_A)) // Move left if A is pressed
         {
-            camera.xyz -= glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
+            camera.velocity -= glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_D)) // Move right if D is pressed
         {
-            camera.xyz += glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
+            camera.velocity += glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_S)) // Move backwards if S is pressed
         {
-            camera.xyz -= camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
+            camera.velocity -= camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_W)) // Move forwards if W is pressed
         {
-            camera.xyz += camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
+            camera.velocity += camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) // Move down if left shift is pressed
         {
-            camera.xyz -= camera.speed * camera.up * frameDelta;
+            camera.velocity -= camera.speed * camera.up * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE)) // Move up if space is pressed
         {
-            camera.xyz += camera.speed * camera.up * frameDelta;
+            camera.velocity += camera.speed * camera.up * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_ESCAPE)) // Terminate program if escape is pressed
         {
             break; // Break out of main program loop
         }
+
+        // Set camera position and velocity
+        camera.xyz += camera.velocity * camera.speed * frameDelta;
+        camera.velocity -= camera.velocity * camera.camerasmoothing * frameDelta;
 
         // Define vertex positions and colors
         float vertices[48] = {

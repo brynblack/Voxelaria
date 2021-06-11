@@ -4,13 +4,17 @@
 namespace cubicSpeed {
     class camera {
     public:
-        glm::vec3 xyz, front, up, direction;
+        glm::vec3 xyz, velocity, front, up, direction;
         double pitch, yaw;
-        float speed, fov;
+        float speed, camerasmoothing, fov;
     public:
         void set_xyz(glm::vec3 xyz)
         {
             this->xyz = xyz;
+        };
+        void set_velocity(glm::vec3 velocity)
+        {
+            this->velocity = velocity;
         };
         void set_pitch(double pitch)
         {
@@ -40,6 +44,10 @@ namespace cubicSpeed {
         void set_speed(float speed)
         {
             this->speed = speed;
+        };
+        void set_camerasmoothing(float camerasmoothing)
+        {
+            this->camerasmoothing = camerasmoothing;
         };
         void set_fov(float fov)
         {

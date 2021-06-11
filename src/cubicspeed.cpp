@@ -13,6 +13,10 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// TODO: Add collision detection system
+// TODO: Add in basic physics engine
+// TODO: Add in voxel like coordinate system
+
 // Declare GLFW variables
 GLFWmonitor* monitor;
 GLFWvidmode* mode;
@@ -254,11 +258,11 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_S)) // Move backwards if S is pressed
         {
-            camera.xyz -= camera.speed * camera.front * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
+            camera.xyz -= camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_W)) // Move forwards if W is pressed
         {
-            camera.xyz += camera.speed * camera.front * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
+            camera.xyz += camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) // Move down if left shift is pressed
         {

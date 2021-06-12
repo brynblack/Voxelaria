@@ -74,7 +74,7 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
 }
 
 // Function to process mouse input
-void mouse_callback(GLFWwindow* wwindow, double xpos, double ypos)
+void mouse_callback(__attribute__((unused)) GLFWwindow* wwindow, double xpos, double ypos)
 {
     if (mouse.firstMouse)
     {
@@ -105,9 +105,9 @@ void mouse_callback(GLFWwindow* wwindow, double xpos, double ypos)
     }
 
     // Set camera direction based upon yaw and pitch
-    camera.direction.x = cos(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
-    camera.direction.y = sin(glm::radians(camera.pitch));
-    camera.direction.z = sin(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
+    camera.direction.x = (float)(cos(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch)));
+    camera.direction.y = (float)(sin(glm::radians(camera.pitch)));
+    camera.direction.z = (float)(sin(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch)));
     camera.front = glm::normalize(camera.direction);
 }
 

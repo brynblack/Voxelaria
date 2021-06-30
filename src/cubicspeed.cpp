@@ -16,6 +16,7 @@
 // TODO: Add collision detection system
 // TODO: Add in basic physics engine
 // TODO: Add in voxel like coordinate system
+// TODO: Add OBAMA Texture
 
 // Declare GLFW variables
 GLFWmonitor* monitor;

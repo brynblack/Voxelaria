@@ -3,6 +3,8 @@ A C++ OpenGL game I made for fun. Still a WIP.
 
 Currently, this is only the base game, and more mechanics will be added in the future.
 
+[![CodeFactor](https://www.codefactor.io/repository/github/brynblack/cubicspeed/badge/main)](https://www.codefactor.io/repository/github/brynblack/cubicspeed/overview/main)
+
 ## How to install
 
 The required dependencies of this program are make, cmake, gcc and git. If you are on MSYS2, after updating your packages,

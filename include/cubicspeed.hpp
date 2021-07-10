@@ -7,6 +7,7 @@ namespace cubicSpeed {
         glm::vec3 xyz, velocity, front, up, direction;
         double pitch, yaw;
         float speed, smoothing, fov;
+
     public:
         void set_xyz(glm::vec3 xyz)
         {

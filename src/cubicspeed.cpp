@@ -132,6 +132,7 @@ int main()
     }
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     auto* mode = (GLFWvidmode*)glfwGetVideoMode(monitor);
+    glfwWindowHint(GLFW_SAMPLES, 4);
     GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "CubicSpeed", monitor, nullptr);
     if (!window)
     {
@@ -161,6 +162,7 @@ int main()
 
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     std::string vertexShader = "#version 330 core\n"

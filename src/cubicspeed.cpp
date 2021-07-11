@@ -20,6 +20,7 @@ cubicSpeed::camera camera;
 cubicSpeed::mouse mouse;
 
 float frameDelta;
+glm::vec3 positions[100];
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -93,15 +94,16 @@ void mouse_callback(__attribute__((unused)) GLFWwindow* window, double x, double
 void addNewCube(glm::vec3 xyz)
 {
     cubeCount++;
+    positions[cubeCount - 1] = glm::vec3(std::ceil(camera.xyz.x), std::ceil(camera.xyz.y), std::ceil(camera.xyz.z));
     GLfloat vertices[48] = {
-            std::round(xyz.x+1.0f), std::round(xyz.y+1.0f), std::round(xyz.z+0.0f), 1.0f, 0.0f, 0.0f,
-            std::round(xyz.x+1.0f), std::round(xyz.y+0.0f), std::round(xyz.z+0.0f), 0.0f, 1.0f, 0.0f,
-            std::round(xyz.x+0.0f), std::round(xyz.y+0.0f), std::round(xyz.z+0.0f), 0.0f, 0.0f, 1.0f,
-            std::round(xyz.x+0.0f), std::round(xyz.y+1.0f), std::round(xyz.z+0.0f), 0.0f, 0.0f, 0.0f,
-            std::round(xyz.x+1.0f), std::round(xyz.y+1.0f), std::round(xyz.z+-1.0f), 0.0f, 1.0f, 0.0f,
-            std::round(xyz.x+0.0f), std::round(xyz.y+1.0f), std::round(xyz.z+-1.0f), 0.0f, 0.0f, 1.0f,
-            std::round(xyz.x+1.0f), std::round(xyz.y+0.0f), std::round(xyz.z+-1.0f), 0.0f, 0.0f, 0.0f,
-            std::round(xyz.x+0.0f), std::round(xyz.y+0.0f), std::round(xyz.z+-1.0f), 0.0f, 0.0f, 1.0f
+            std::ceil(xyz.x+1.0f), std::ceil(xyz.y+1.0f), std::ceil(xyz.z+0.0f), 1.0f, 0.0f, 0.0f,
+            std::ceil(xyz.x+1.0f), std::ceil(xyz.y+0.0f), std::ceil(xyz.z+0.0f), 0.0f, 1.0f, 0.0f,
+            std::ceil(xyz.x+0.0f), std::ceil(xyz.y+0.0f), std::ceil(xyz.z+0.0f), 0.0f, 0.0f, 1.0f,
+            std::ceil(xyz.x+0.0f), std::ceil(xyz.y+1.0f), std::ceil(xyz.z+0.0f), 0.0f, 0.0f, 0.0f,
+            std::ceil(xyz.x+1.0f), std::ceil(xyz.y+1.0f), std::ceil(xyz.z+-1.0f), 0.0f, 1.0f, 0.0f,
+            std::ceil(xyz.x+0.0f), std::ceil(xyz.y+1.0f), std::ceil(xyz.z+-1.0f), 0.0f, 0.0f, 1.0f,
+            std::ceil(xyz.x+1.0f), std::ceil(xyz.y+0.0f), std::ceil(xyz.z+-1.0f), 0.0f, 0.0f, 0.0f,
+            std::ceil(xyz.x+0.0f), std::ceil(xyz.y+0.0f), std::ceil(xyz.z+-1.0f), 0.0f, 0.0f, 1.0f
     };
     GLint indices[36] = {
             (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 2,
@@ -256,8 +258,16 @@ int main()
         {
             break;
         }
+        for (int i = 0; i < 48; i++)
+        {
+            if (glm::vec3(std::ceil(camera.xyz.x - 1), std::ceil(camera.xyz.y - 1), std::ceil(camera.xyz.z)) == positions[i])
+            {
+                camera.set_velocity(camera.velocity * -1.0f);
+            }
+        }
 
         camera.xyz += camera.velocity * camera.speed * frameDelta;
+        camera.velocity -= glm::vec3(0, 0.002, 0) * frameDelta;
         camera.velocity -= camera.velocity * camera.smoothing * frameDelta;
 
         View = glm::lookAt(camera.xyz, camera.xyz + camera.front, camera.up);

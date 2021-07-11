@@ -123,6 +123,14 @@ void addNewCube(glm::vec3 xyz)
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (cubeCount - 1) * 36 * (GLintptr)sizeof(GLint), 36 * sizeof(GLint), indices);
 }
 
+void mouse_button_callback(__attribute__((unused)) GLFWwindow* window, int button, int action, __attribute__((unused)) int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        addNewCube(camera.xyz);
+    }
+}
+
 int main()
 {
     if (!glfwInit())
@@ -194,7 +202,7 @@ int main()
     camera.set_yaw(-90.0);
     camera.set_fov(90.0f);
     camera.set_speed(0.01f);
-    camera.set_smoothing(0.01f);
+    camera.set_smoothing(0.005f);
 
     mouse.lastX = mode->width / 2.0;
     mouse.lastY = mode->height / 2.0;
@@ -202,6 +210,7 @@ int main()
     mouse.firstMouse = true;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     glm::mat4 Model = glm::mat4(1.0f);
     glm::mat4 View = glm::mat4(1.0f);
@@ -234,10 +243,6 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_W))
         {
             camera.velocity += camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
-        }
-        if (glfwGetKey(window, GLFW_KEY_E))
-        {
-            addNewCube(camera.xyz);
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
         {

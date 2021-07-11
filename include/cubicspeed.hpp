@@ -9,55 +9,55 @@ namespace cubicSpeed {
         float speed, smoothing, fov;
 
     public:
-        void set_xyz(glm::vec3 xyz)
+        void set_xyz(glm::vec3 _xyz)
         {
-            this->xyz = xyz;
+            this->xyz = _xyz;
         };
-        void set_velocity(glm::vec3 velocity)
+        void set_velocity(glm::vec3 _velocity)
         {
-            this->velocity = velocity;
+            this->velocity = _velocity;
         };
-        void set_pitch(double pitch)
+        void set_pitch(double _pitch)
         {
-            this->pitch = pitch;
-        };
-
-        void set_yaw(double yaw)
-        {
-            this->yaw = yaw;
+            this->pitch = _pitch;
         };
 
-        void set_front(glm::vec3 front)
+        void set_yaw(double _yaw)
         {
-            this->front = front;
+            this->yaw = _yaw;
         };
 
-        void set_up(glm::vec3 up)
+        void set_front(glm::vec3 _front)
         {
-            this->up = up;
+            this->front = _front;
         };
 
-        void set_direction(glm::vec3 direction)
+        void set_up(glm::vec3 _up)
         {
-            this->direction = direction;
+            this->up = _up;
         };
 
-        void set_speed(float speed)
+        void set_direction(glm::vec3 _direction)
         {
-            this->speed = speed;
+            this->direction = _direction;
         };
-        void set_smoothing(float smoothing)
+
+        void set_speed(float _speed)
         {
-            this->smoothing = smoothing;
+            this->speed = _speed;
         };
-        void set_fov(float fov)
+        void set_smoothing(float _smoothing)
         {
-            this->fov = fov;
+            this->smoothing = _smoothing;
+        };
+        void set_fov(float _fov)
+        {
+            this->fov = _fov;
         };
     };
     class mouse {
     public:
-        double lastX, lastY, xoffset, yoffset;
+        double lastX, lastY, x_offset, y_offset;
         float sensitivity;
         bool firstMouse;
     };

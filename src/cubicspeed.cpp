@@ -66,14 +66,14 @@ void mouse_callback(__attribute__((unused)) GLFWwindow* window, double x, double
         mouse.firstMouse = false;
     }
 
-    mouse.xoffset = x - mouse.lastX;
-    mouse.yoffset = mouse.lastY - y;
+    mouse.x_offset = x - mouse.lastX;
+    mouse.y_offset = mouse.lastY - y;
     mouse.lastX = x;
     mouse.lastY = y;
-    mouse.xoffset *= mouse.sensitivity;
-    mouse.yoffset *= mouse.sensitivity;
-    camera.yaw += mouse.xoffset;
-    camera.pitch += mouse.yoffset;
+    mouse.x_offset *= mouse.sensitivity;
+    mouse.y_offset *= mouse.sensitivity;
+    camera.yaw += mouse.x_offset;
+    camera.pitch += mouse.y_offset;
 
     if(camera.pitch > 89.0f)
     {

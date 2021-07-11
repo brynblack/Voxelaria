@@ -32,9 +32,11 @@ cubicSpeed::mouse mouse;
 float frameDelta;
 
 // Define buffer variables
-unsigned int buffer;
+unsigned int vbo;
 unsigned int ibo;
 unsigned int shader;
+
+unsigned int cubeCount = 0;
 
 // Compile shader function to compile the given shader code
 static unsigned int CompileShader(unsigned int type, const std::string& source)
@@ -112,6 +114,39 @@ void mouse_callback(__attribute__((unused)) GLFWwindow* wwindow, double xpos, do
     camera.front = glm::normalize(camera.direction);
 }
 
+void addNewCube(float x, float y, float z)
+{
+    cubeCount++;
+    float vertices[48] = {
+            std::round(x+1.0f), std::round(y+1.0f), std::round(z+0.0f), 1.0f, 0.0f, 0.0f, // 0
+            std::round(x+1.0f), std::round(y+0.0f), std::round(z+0.0f), 0.0f, 1.0f, 0.0f, // 1
+            std::round(x+0.0f), std::round(y+0.0f), std::round(z+0.0f), 0.0f, 0.0f, 1.0f, // 2
+            std::round(x+0.0f), std::round(y+1.0f), std::round(z+0.0f), 0.0f, 0.0f, 0.0f, // 3
+            std::round(x+1.0f), std::round(y+1.0f), std::round(z+-1.0f), 0.0f, 1.0f, 0.0f, // 4
+            std::round(x+0.0f), std::round(y+1.0f), std::round(z+-1.0f), 0.0f, 0.0f, 1.0f, // 5
+            std::round(x+1.0f), std::round(y+0.0f), std::round(z+-1.0f), 0.0f, 0.0f, 0.0f, // 6
+            std::round(x+0.0f), std::round(y+0.0f), std::round(z+-1.0f), 0.0f, 0.0f, 1.0f // 7
+    };
+    unsigned int indices[36] = {
+            (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 2,
+            (cubeCount - 1) * 8 + 2, (cubeCount - 1) * 8 + 3, (cubeCount - 1) * 8 + 0,
+            (cubeCount - 1) * 8 + 4, (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 3,
+            (cubeCount - 1) * 8 + 3, (cubeCount - 1) * 8 + 5, (cubeCount - 1) * 8 + 4,
+            (cubeCount - 1) * 8 + 4, (cubeCount - 1) * 8 + 6, (cubeCount - 1) * 8 + 1,
+            (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 4,
+            (cubeCount - 1) * 8 + 5, (cubeCount - 1) * 8 + 7, (cubeCount - 1) * 8 + 6,
+            (cubeCount - 1) * 8 + 6, (cubeCount - 1) * 8 + 4, (cubeCount - 1) * 8 + 5,
+            (cubeCount - 1) * 8 + 3, (cubeCount - 1) * 8 + 2, (cubeCount - 1) * 8 + 7,
+            (cubeCount - 1) * 8 + 7, (cubeCount - 1) * 8 + 5, (cubeCount - 1) * 8 + 3,
+            (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 6, (cubeCount - 1) * 8 + 7,
+            (cubeCount - 1) * 8 + 7, (cubeCount - 1) * 8 + 2, (cubeCount - 1) * 8 + 1
+    };
+    glBindBuffer(GL_ARRAY_BUFFER, vbo); // Bind vertex buffer
+    glBufferSubData(GL_ARRAY_BUFFER, (cubeCount - 1) * 48 * sizeof(float), 48 * sizeof(float), vertices); // Send vertex data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); // Bind element buffer
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (cubeCount - 1) * 36 * sizeof(unsigned int), 36 * sizeof(unsigned int), indices); // Send element data
+}
+
 // Main function to initialise OpenGL and run all other code
 int main()
 {
@@ -163,24 +198,11 @@ int main()
     // Generate buffers and define vertex attributes
 
     // Define element buffer array
-    unsigned int indicies[36] = {
-            0, 1, 2,
-            2, 3, 0,
-            4, 0, 3,
-            3, 5, 4,
-            4, 6, 1,
-            1, 0, 4,
-            5, 7, 6,
-            6, 4, 5,
-            3, 2, 7,
-            7, 5, 3,
-            1, 6, 7,
-            7, 2, 1
-    };
 
     // Array buffer
-    glGenBuffers(1, &buffer); // Generate array buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffer); // Bind array buffer
+    glGenBuffers(1, &vbo); // Generate array buffer
+    glBindBuffer(GL_ARRAY_BUFFER, vbo); // Bind vertex buffer
+    glBufferData(GL_ARRAY_BUFFER, 10000000, nullptr, GL_DYNAMIC_DRAW); // Initialise buffer with 10000 bytes of data
     glEnableVertexAttribArray(0); // Enable vertex attribute 1
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*)nullptr); // Configure vertex attribute 1
     glEnableVertexAttribArray(1); // Enable vertex attribute 2
@@ -189,6 +211,7 @@ int main()
     // Element buffer
     glGenBuffers(1, &ibo); // Generate element buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); // Bind element buffer
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 10000000, nullptr, GL_DYNAMIC_DRAW); // Initialise buffer with 10000 bytes of data
 
     // Enable and configure OpenGL functions
 
@@ -278,22 +301,14 @@ int main()
         {
             break; // Break out of main program loop
         }
+        if (glfwGetKey(window, GLFW_KEY_E))
+        {
+            addNewCube(camera.xyz.x, camera.xyz.y, camera.xyz.z);
+        }
 
         // Set camera position and velocity
         camera.xyz += camera.velocity * camera.speed * frameDelta;
         camera.velocity -= camera.velocity * camera.smoothing * frameDelta;
-
-        // Define vertex positions and colors
-        float vertices[48] = {
-                1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 0
-                1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // 1
-                0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // 2
-                0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 3
-                1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // 4
-                0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, // 5
-                1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, // 6
-                0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f // 7
-        };
 
         View = glm::lookAt(camera.xyz, camera.xyz + camera.front, camera.up); // Set view matrix
 
@@ -302,14 +317,8 @@ int main()
         glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(View)); // View matrix
         glUniformMatrix4fv(projection_location, 1, GL_FALSE, glm::value_ptr(Projection)); // Projection matrix
 
-        // Bind buffers and set buffer data
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer); // Bind vertex buffer
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 48 * sizeof(float), vertices, GL_DYNAMIC_DRAW); // Set vertex buffer data (the amount of floats in the vertex array)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); // Bind element buffer
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36 * sizeof(unsigned int), indicies, GL_DYNAMIC_DRAW); // Set element buffer data (the amount of integers in the element array)
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr); // Draw elements (the amount of integers in the element array)
+        glDrawElements(GL_TRIANGLES, cubeCount * 36, GL_UNSIGNED_INT, nullptr); // Draw elements (the amount of integers in the element array)
 
         glfwSwapBuffers(window); // Swap buffers
 

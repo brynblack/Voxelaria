@@ -57,19 +57,19 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
     return program;
 }
 
-void mouse_callback(__attribute__((unused)) GLFWwindow* window, double xpos, double ypos)
+void mouse_callback(__attribute__((unused)) GLFWwindow* window, double x, double y)
 {
     if (mouse.firstMouse)
     {
-        mouse.lastX = xpos;
-        mouse.lastY = ypos;
+        mouse.lastX = x;
+        mouse.lastY = y;
         mouse.firstMouse = false;
     }
 
-    mouse.xoffset = xpos - mouse.lastX;
-    mouse.yoffset = mouse.lastY - ypos;
-    mouse.lastX = xpos;
-    mouse.lastY = ypos;
+    mouse.xoffset = x - mouse.lastX;
+    mouse.yoffset = mouse.lastY - y;
+    mouse.lastX = x;
+    mouse.lastY = y;
     mouse.xoffset *= mouse.sensitivity;
     mouse.yoffset *= mouse.sensitivity;
     camera.yaw += mouse.xoffset;

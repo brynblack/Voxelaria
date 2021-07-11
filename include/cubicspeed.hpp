@@ -55,24 +55,6 @@ namespace cubicSpeed {
             this->fov = fov;
         };
     };
-    class window {
-    public:
-        int width, height;
-        const char *title;
-    public:
-        void set_width(int width)
-        {
-            this->width = width;
-        };
-        void set_height(int height)
-        {
-            this->height = height;
-        };
-        void set_title(const char* title)
-        {
-            this->title = title;
-        };
-    };
     class mouse {
     public:
         double lastX, lastY, xoffset, yoffset;

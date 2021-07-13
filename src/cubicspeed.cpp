@@ -20,7 +20,7 @@ cubicSpeed::camera camera;
 cubicSpeed::mouse mouse;
 
 GLfloat frameDelta;
-glm::vec3 positions[100];
+glm::vec3 positions[1000];
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -152,11 +152,12 @@ void deleteVoxel(glm::vec3 xyz)
         {
             if (positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z)))
             {
-                for(int ind = i; ind <= 100-1; ind++)
+                size_t size = sizeof positions / sizeof positions[0];
+                for(int ind = i; ind <= size-1; ind++)
                 {
                     positions[i] = positions[ind+1];
                 }
-                positions[100-1] = { };
+                positions[size-1] = { };
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
                 glClearBufferSubData(GL_ARRAY_BUFFER, GL_R32F, i * 48 * (GLintptr)sizeof(GLfloat), 48 * sizeof(GLfloat), GL_RED, GL_FLOAT, nullptr);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);

@@ -144,11 +144,37 @@ void createNewVoxel(glm::vec3 xyz)
     }
 }
 
+void deleteVoxel(glm::vec3 xyz)
+{
+    if (cubeCount != 0)
+    {
+        for (int i = 0; i < cubeCount; i++)
+        {
+            if (positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z)))
+            {
+                for(int ind = i; ind <= 100-1; ind++)
+                {
+                    positions[i] = positions[ind+1];
+                }
+                positions[100-1] = { };
+                glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                glClearBufferSubData(GL_ARRAY_BUFFER, GL_R32F, i * 48 * (GLintptr)sizeof(GLfloat), 48 * sizeof(GLfloat), GL_RED, GL_FLOAT, nullptr);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+                glClearBufferSubData(GL_ELEMENT_ARRAY_BUFFER, GL_R32F, i * 36 * (GLintptr)sizeof(GLfloat), 36 * sizeof(GLfloat), GL_RED, GL_INT, nullptr);
+            }
+        }
+    }
+}
+
 void mouse_button_callback(__attribute__((unused)) GLFWwindow* window, int button, int action, __attribute__((unused)) int mods)
 {
     if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
         createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
+    }
+    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        deleteVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
     }
 }
 

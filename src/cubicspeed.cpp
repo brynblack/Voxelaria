@@ -20,7 +20,7 @@ cubicSpeed::camera camera;
 cubicSpeed::mouse mouse;
 
 GLfloat frameDelta;
-glm::vec3 positions[1000];
+glm::vec3 positions[1000000];
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -171,11 +171,11 @@ void mouse_button_callback(__attribute__((unused)) GLFWwindow* window, int butto
 {
     if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
+        createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 1, camera.xyz.z));
     }
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        deleteVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
+        deleteVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 1, camera.xyz.z));
     }
 }
 
@@ -262,7 +262,7 @@ int main()
 
     glm::mat4 Model = glm::mat4(1.0f);
     glm::mat4 View = glm::mat4(1.0f);
-    glm::mat4 Projection = glm::perspective(glm::radians(camera.fov), (GLfloat)mode->width/(GLfloat)mode->height, 0.1f, 100.0f);
+    glm::mat4 Projection = glm::perspective(glm::radians(camera.fov), (GLfloat)mode->width/(GLfloat)mode->height, 0.01f, 100.0f);
 
     GLint model_location = glGetUniformLocation(shader, "model");
     GLint view_location = glGetUniformLocation(shader, "view");
@@ -309,12 +309,12 @@ int main()
             }
         }
 
-        if (checkCollision(camera.xyz))
+        camera.velocity -= camera.velocity * camera.smoothing * frameDelta;
+
+        if (checkCollision(camera.xyz + camera.velocity * camera.speed * frameDelta))
         {
             camera.velocity *= -2.0f;
         }
-
-        camera.velocity -= camera.velocity * camera.smoothing * frameDelta;
 
         camera.xyz += camera.velocity * camera.speed * frameDelta;
 

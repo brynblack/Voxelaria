@@ -339,6 +339,10 @@ int main()
         {
             camera.velocity *= glm::vec3(1.0f, 1.0f, 0.0f);
         }
+        if (checkCameraCollision(camera.xyz + camera.velocity * frameDelta))
+        {
+            camera.velocity.y += 0.01f;
+        }
 
         camera.xyz += camera.velocity * frameDelta;
 

@@ -91,7 +91,7 @@ void mouse_callback(__attribute__((unused)) GLFWwindow* window, double x, double
     camera.front = glm::normalize(camera.direction);
 }
 
-bool checkCollision(glm::vec3 xyz)
+bool checkBlockCollision(glm::vec3 xyz)
 {
     bool locationInsideBlock = false;
     if (cubeCount != 0)
@@ -107,9 +107,25 @@ bool checkCollision(glm::vec3 xyz)
     return locationInsideBlock;
 }
 
+bool checkCameraCollision(glm::vec3 xyz)
+{
+    bool locationInsideBlock = false;
+    if (cubeCount != 0)
+    {
+        for (int i = 0; i < cubeCount; i++)
+        {
+            if (positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y + 1), std::floor(xyz.z)) || positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z)) || positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y - 1), std::floor(xyz.z)))
+            {
+                locationInsideBlock = true;
+            }
+        }
+    }
+    return locationInsideBlock;
+}
+
 void createNewVoxel(glm::vec3 xyz)
 {
-    if (!checkCollision(xyz))
+    if (!checkBlockCollision(xyz))
     {
         cubeCount++;
         positions[cubeCount - 1] = glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z));
@@ -171,11 +187,19 @@ void mouse_button_callback(__attribute__((unused)) GLFWwindow* window, int butto
 {
     if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 1, camera.xyz.z));
+        createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
     }
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        deleteVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 1, camera.xyz.z));
+        deleteVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
+    }
+}
+
+void key_callback(__attribute__((unused)) GLFWwindow* window, int key, __attribute__((unused)) int scancode, int action, __attribute__((unused)) int mods)
+{
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !checkCameraCollision(camera.xyz + camera.velocity.y * camera.speed * frameDelta) && checkCameraCollision(glm::vec3(camera.xyz.x, camera.xyz.y - 0.1, camera.xyz.z) + camera.velocity.y * camera.speed * frameDelta))
+    {
+        camera.velocity += 16.0f * camera.speed * camera.up * frameDelta;
     }
 }
 
@@ -257,6 +281,7 @@ int main()
     mouse.sensitivity = 0.1f;
     mouse.firstMouse = true;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
@@ -281,39 +306,40 @@ int main()
         {
             break;
         }
-        if (!checkCollision(camera.xyz))
+        if (glfwGetKey(window, GLFW_KEY_A))
         {
-            if (glfwGetKey(window, GLFW_KEY_A))
-            {
-                camera.velocity -= glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
-            }
-            if (glfwGetKey(window, GLFW_KEY_D))
-            {
-                camera.velocity += glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
-            }
-            if (glfwGetKey(window, GLFW_KEY_S))
-            {
-                camera.velocity -= camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
-            }
-            if (glfwGetKey(window, GLFW_KEY_W))
-            {
-                camera.velocity += camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
-            }
-            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
-            {
-                camera.velocity -= camera.speed * camera.up * frameDelta;
-            }
-            if (glfwGetKey(window, GLFW_KEY_SPACE))
-            {
-                camera.velocity += camera.speed * camera.up * frameDelta;
-            }
+            camera.velocity -= glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D))
+        {
+            camera.velocity += glm::normalize(glm::cross(camera.front, camera.up)) * camera.speed * frameDelta;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S))
+        {
+            camera.velocity -= camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W))
+        {
+            camera.velocity += camera.speed * glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * frameDelta;
         }
 
         camera.velocity -= camera.velocity * camera.smoothing * frameDelta;
+        camera.velocity.y -= 0.01f * frameDelta;
 
-        if (checkCollision(camera.xyz + camera.velocity * camera.speed * frameDelta))
+        if (checkCameraCollision(camera.xyz + camera.velocity * camera.speed * frameDelta))
         {
-            camera.velocity *= -2.0f;
+            if (checkCameraCollision(camera.xyz + glm::vec3(camera.velocity.x, 0.0f, 0.0f) * camera.speed * frameDelta))
+            {
+                camera.velocity *= glm::vec3(0.0f, 1.0f, 1.0f);
+            }
+            if (checkCameraCollision(camera.xyz + glm::vec3(0.0f, camera.velocity.y, 0.0f) * camera.speed * frameDelta))
+            {
+                camera.velocity *= glm::vec3(1.0f, 0.0f, 1.0f);
+            }
+            if (checkCameraCollision(camera.xyz + glm::vec3(0.0f, 0.0f, camera.velocity.z) * camera.speed * frameDelta))
+            {
+                camera.velocity *= glm::vec3(1.0f, 1.0f, 0.0f);
+            }
         }
 
         camera.xyz += camera.velocity * camera.speed * frameDelta;

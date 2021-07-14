@@ -5,61 +5,65 @@ namespace cubicSpeed {
     class camera {
     public:
         glm::vec3 xyz, velocity, front, up, direction;
-        double pitch, yaw;
-        float speed, smoothing, fov;
+        GLdouble pitch, yaw;
+        GLfloat speed, smoothing, jumpHeight, fov;
 
     public:
-        void set_xyz(glm::vec3 _xyz)
+        GLvoid set_xyz(glm::vec3 _xyz)
         {
             this->xyz = _xyz;
         };
-        void set_velocity(glm::vec3 _velocity)
+        GLvoid set_velocity(glm::vec3 _velocity)
         {
             this->velocity = _velocity;
         };
-        void set_pitch(double _pitch)
+        GLvoid set_pitch(GLdouble _pitch)
         {
             this->pitch = _pitch;
         };
 
-        void set_yaw(double _yaw)
+        GLvoid set_yaw(GLdouble _yaw)
         {
             this->yaw = _yaw;
         };
 
-        void set_front(glm::vec3 _front)
+        GLvoid set_front(glm::vec3 _front)
         {
             this->front = _front;
         };
 
-        void set_up(glm::vec3 _up)
+        GLvoid set_up(glm::vec3 _up)
         {
             this->up = _up;
         };
 
-        void set_direction(glm::vec3 _direction)
+        GLvoid set_direction(glm::vec3 _direction)
         {
             this->direction = _direction;
         };
 
-        void set_speed(float _speed)
+        GLvoid set_speed(GLfloat _speed)
         {
             this->speed = _speed;
         };
-        void set_smoothing(float _smoothing)
+        GLvoid set_smoothing(GLfloat _smoothing)
         {
             this->smoothing = _smoothing;
         };
-        void set_fov(float _fov)
+        GLvoid set_jumpHeight(GLfloat _jumpHeight)
+        {
+            this->jumpHeight = _jumpHeight;
+        };
+        GLvoid set_fov(GLfloat _fov)
         {
             this->fov = _fov;
         };
     };
     class mouse {
     public:
-        double lastX, lastY, x_offset, y_offset;
-        float sensitivity;
-        bool firstMouse;
+        GLdouble lastX, lastY, x_offset, y_offset;
+        GLfloat sensitivity;
+        GLboolean firstMouse;
     };
 }
 #endif

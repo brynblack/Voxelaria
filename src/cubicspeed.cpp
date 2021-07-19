@@ -297,6 +297,8 @@ int main()
 
     std::chrono::high_resolution_clock::time_point t1, t2;
 
+    createNewVoxel(glm::vec3(0.0f, 0.0f, 0.0f));
+
     while (!glfwWindowShouldClose(window))
     {
         frameDelta = std::chrono::duration<float, std::milli>(t2 - t1).count();

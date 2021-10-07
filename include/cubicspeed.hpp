@@ -7,6 +7,7 @@ namespace cubicSpeed {
         glm::vec3 xyz, velocity, front, up, direction;
         double pitch, yaw;
         float speed, smoothing, jumpHeight, fov;
+        bool flying;
 
     public:
         void set_xyz(glm::vec3 _xyz)
@@ -57,6 +58,10 @@ namespace cubicSpeed {
         void set_fov(float _fov)
         {
             this->fov = _fov;
+        };
+        void enable_flying(bool _flying)
+        {
+            this->flying = _flying;
         };
     };
     class mouse {

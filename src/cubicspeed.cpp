@@ -198,7 +198,7 @@ void mouse_button_callback(__attribute__((unused)) GLFWwindow* window, int butto
 
 void key_callback(__attribute__((unused)) GLFWwindow* window, int key, __attribute__((unused)) int scancode, int action, __attribute__((unused)) int mods)
 {
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !checkCameraCollision(camera.xyz + glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameDelta) && checkCameraCollision(glm::vec3(camera.xyz.x, camera.xyz.y - 0.1, camera.xyz.z) + glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameDelta))
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !camera.flying && !checkCameraCollision(camera.xyz + glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameDelta) && checkCameraCollision(glm::vec3(camera.xyz.x, camera.xyz.y - 0.1, camera.xyz.z) + glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameDelta))
     {
         camera.velocity += camera.jumpHeight * camera.up * frameDelta;
     }
@@ -276,7 +276,8 @@ int main()
     camera.set_fov(90.0f);
     camera.set_speed(0.00005f);
     camera.set_smoothing(0.01f);
-    camera.set_jumpHeight(0.001f);
+    camera.set_jumpHeight(0.05f);
+    camera.enable_flying(false);
 
     mouse.lastX = mode->width / 2.0;
     mouse.lastY = mode->height / 2.0;
@@ -326,8 +327,21 @@ int main()
         {
             camera.velocity += glm::vec3(cos(glm::radians(camera.yaw)), 0.0f, sin(glm::radians(camera.yaw))) * glm::vec3(1.0f, 0.0f, 1.0f) * camera.speed * frameDelta;
         }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) && camera.flying)
+        {
+            camera.velocity += glm::vec3(0.0f, 1.0f, 0.0f) * camera.speed * frameDelta;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) && camera.flying)
+        {
+            camera.velocity -= glm::vec3(0.0f, 1.0f, 0.0f) * camera.speed * frameDelta;
+        }
 
-        camera.velocity -= glm::vec3(camera.velocity.x * camera.smoothing * frameDelta, gravity * frameDelta, camera.velocity.z * camera.smoothing * frameDelta);
+        if (!camera.flying) {
+            camera.velocity -= glm::vec3(camera.velocity.x * camera.smoothing * frameDelta, gravity * frameDelta, camera.velocity.z * camera.smoothing * frameDelta);
+        }
+        else {
+            camera.velocity -= glm::vec3(camera.velocity.x * camera.smoothing * frameDelta, camera.velocity.y * camera.smoothing * frameDelta, camera.velocity.z * camera.smoothing * frameDelta);
+        }
 
         if (checkCameraCollision(camera.xyz + glm::vec3(camera.velocity.x, 0.0f, 0.0f) * frameDelta))
         {

@@ -1,0 +1,4 @@
+include/GLEW linguist-vendored
+include/GLFW linguist-vendored
+include/glm linguist-vendored
+lib/* linguist-vendored

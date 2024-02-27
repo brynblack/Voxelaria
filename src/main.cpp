@@ -15,7 +15,7 @@ GLuint ibo;
 GLuint shader;
 
 GLint cubeCount = 0;
-const GLfloat gravity = 0.0000980665f;
+const GLfloat gravity = 0.00005;
 
 Voxelaria::camera camera;
 Voxelaria::mouse mouse;
@@ -276,7 +276,7 @@ int main()
     camera.set_fov(90.0f);
     camera.set_speed(0.00005f);
     camera.set_smoothing(0.01f);
-    camera.set_jumpHeight(0.05f);
+    camera.set_jumpHeight(0.001f);
     camera.enable_flying(false);
 
     mouse.lastX = mode->width / 2.0;

@@ -17,8 +17,8 @@
             pkg-config
           ];
           buildInputs = [
-            glew
-            glfw
+            glew-egl
+            glfw-wayland
             glm
           ];
         };

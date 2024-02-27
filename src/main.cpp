@@ -1,7 +1,7 @@
-#include <GLEW/glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "cubicspeed.hpp"
+#include "main.hpp"
 #include <chrono>
 #include <string>
 #include <iostream>
@@ -17,8 +17,8 @@ GLuint shader;
 GLint cubeCount = 0;
 const GLfloat gravity = 0.0000980665f;
 
-cubicSpeed::camera camera;
-cubicSpeed::mouse mouse;
+Voxelaria::camera camera;
+Voxelaria::mouse mouse;
 
 GLfloat frameDelta;
 glm::vec3 positions[1000000];
@@ -170,7 +170,7 @@ void deleteVoxel(glm::vec3 xyz)
             if (positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z)))
             {
                 size_t size = sizeof positions / sizeof positions[0];
-                for(int ind = i; ind <= size-1; ind++)
+                for(size_t ind = i; ind <= size-1; ind++)
                 {
                     positions[i] = positions[ind+1];
                 }
@@ -214,7 +214,7 @@ int main()
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     auto* mode = (GLFWvidmode*)glfwGetVideoMode(monitor);
     glfwWindowHint(GLFW_SAMPLES, 4);
-    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "CubicSpeed", monitor, nullptr);
+    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "Voxelaria", monitor, nullptr);
     if (!window)
     {
         std::cout << "A fatal error has occurred: Unable to create GLFW window" << std::endl;

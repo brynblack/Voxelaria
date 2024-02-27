@@ -3,7 +3,9 @@ An open world voxel playground.
 
 ## Building
 ```
+nix develop
 meson setup build
+cd build
 meson compile
 ```
 

@@ -1,7 +1,8 @@
-#ifndef cubicspeedlibs
-#define cubicspeedlibs
+#pragma once
+
 #include <glm/ext/vector_float3.hpp>
-namespace cubicSpeed {
+
+namespace Voxelaria {
     class camera {
     public:
         glm::vec3 xyz, velocity, front, up, direction;
@@ -71,4 +72,3 @@ namespace cubicSpeed {
         bool firstMouse;
     };
 }
-#endif

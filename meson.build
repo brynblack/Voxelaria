@@ -1,9 +1,12 @@
 project('Voxelaria', 'cpp',
   version : '0.1',
   default_options : [
-    'warning_level=3',
-    'optimization=3',
     'buildtype=release',
+    'debug=false',
+    'optimization=3',
+    'strip=true',
+    'warning_level=3',
+    'werror=true'
   ])
 
 subdir('src')

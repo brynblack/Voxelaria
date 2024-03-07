@@ -4,24 +4,30 @@
 #include <GLFW/glfw3.h>
 
 #include <chrono>
+#include <format>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 #include <iostream>
+#include <random>
 #include <string>
 
-GLuint vbo;
-GLuint ibo;
-GLuint shader;
+#include "logger.hpp"
 
-GLint cubeCount = 0;
-const GLfloat gravity = 0.00005;
+const GLfloat gravity = 0.000035;
+const int platformSize = 50;
+
+GLuint vbo, ibo, shader;
 
 Voxelaria::camera camera;
 Voxelaria::mouse mouse;
 
-GLfloat frameDelta;
+GLint cubeCount = 0;
+GLfloat frameTime;
 glm::vec3 positions[1000000];
+glm::mat4 Projection;
+
+using namespace logger;
 
 static unsigned int CompileShader(unsigned int type,
                                   const std::string& source) {
@@ -36,10 +42,9 @@ static unsigned int CompileShader(unsigned int type,
     glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
     char* message = (char*)alloca(length * sizeof(char));
     glGetShaderInfoLog(id, length, &length, message);
-    std::cout << "Failed to compile "
-              << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader"
-              << std::endl;
-    std::cout << message << std::endl;
+    error(std::format("Failed to compile {} shader",
+                      (type == GL_VERTEX_SHADER ? "vertex" : "fragment")));
+    error(message);
     glDeleteShader(id);
     return 0;
   }
@@ -58,6 +63,92 @@ static unsigned int CreateShader(const std::string& vertexShader,
   glDeleteShader(vs);
   glDeleteShader(fs);
   return program;
+}
+
+bool checkBlockCollision(glm::vec3 xyz) {
+  for (int i = 0; i < cubeCount; ++i) {
+    if (positions[i] == glm::floor(xyz)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool checkCameraCollision(glm::vec3 xyz) {
+  for (int i = 0; i < cubeCount; ++i) {
+    glm::vec3 pos = positions[i];
+    xyz = glm::floor(xyz);
+    if (pos == xyz || pos == glm::vec3(xyz.x, xyz.y + 1, xyz.z) ||
+        pos == glm::vec3(xyz.x, xyz.y - 1, xyz.z)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void createNewVoxel(glm::vec3 xyz) {
+  if (!checkBlockCollision(xyz)) {
+    ++cubeCount;
+    int offset = cubeCount - 1;
+    xyz = glm::floor(xyz);
+    positions[offset] = xyz;
+
+    GLfloat vertices[48] = {
+        xyz.x + 1.0f, xyz.y + 1.0f, xyz.z + 0.0f, 1.0f, 0.0f, 0.0f,
+        xyz.x + 1.0f, xyz.y + 0.0f, xyz.z + 0.0f, 0.0f, 1.0f, 0.0f,
+        xyz.x + 0.0f, xyz.y + 0.0f, xyz.z + 0.0f, 0.0f, 0.0f, 1.0f,
+        xyz.x + 0.0f, xyz.y + 1.0f, xyz.z + 0.0f, 0.0f, 0.0f, 0.0f,
+        xyz.x + 1.0f, xyz.y + 1.0f, xyz.z + 1.0f, 0.0f, 1.0f, 0.0f,
+        xyz.x + 0.0f, xyz.y + 1.0f, xyz.z + 1.0f, 0.0f, 0.0f, 1.0f,
+        xyz.x + 1.0f, xyz.y + 0.0f, xyz.z + 1.0f, 0.0f, 0.0f, 0.0f,
+        xyz.x + 0.0f, xyz.y + 0.0f, xyz.z + 1.0f, 0.0f, 0.0f, 1.0f};
+    GLint indices[36] = {
+        offset * 8 + 0, offset * 8 + 1, offset * 8 + 2, offset * 8 + 2,
+        offset * 8 + 3, offset * 8 + 0, offset * 8 + 4, offset * 8 + 0,
+        offset * 8 + 3, offset * 8 + 3, offset * 8 + 5, offset * 8 + 4,
+        offset * 8 + 4, offset * 8 + 6, offset * 8 + 1, offset * 8 + 1,
+        offset * 8 + 0, offset * 8 + 4, offset * 8 + 5, offset * 8 + 7,
+        offset * 8 + 6, offset * 8 + 6, offset * 8 + 4, offset * 8 + 5,
+        offset * 8 + 3, offset * 8 + 2, offset * 8 + 7, offset * 8 + 7,
+        offset * 8 + 5, offset * 8 + 3, offset * 8 + 1, offset * 8 + 6,
+        offset * 8 + 7, offset * 8 + 7, offset * 8 + 2, offset * 8 + 1};
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, offset * 48 * (GLintptr)sizeof(GLfloat),
+                    48 * sizeof(GLfloat), vertices);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
+                    offset * 36 * (GLintptr)sizeof(GLint), 36 * sizeof(GLint),
+                    indices);
+  }
+}
+
+void deleteVoxel(glm::vec3 xyz) {
+  for (int i = 0; i < cubeCount; ++i) {
+    if (positions[i] == glm::floor(xyz)) {
+      size_t size = sizeof positions / sizeof positions[0];
+      for (size_t ind = i; ind <= size - 1; ++ind) {
+        positions[i] = positions[ind + 1];
+      }
+      positions[size - 1] = {};
+      glBindBuffer(GL_ARRAY_BUFFER, vbo);
+      glClearBufferSubData(GL_ARRAY_BUFFER, GL_R32F,
+                           i * 48 * (GLintptr)sizeof(GLfloat),
+                           48 * sizeof(GLfloat), GL_RED, GL_FLOAT, nullptr);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+      glClearBufferSubData(GL_ELEMENT_ARRAY_BUFFER, GL_R32F,
+                           i * 36 * (GLintptr)sizeof(GLfloat),
+                           36 * sizeof(GLfloat), GL_RED, GL_INT, nullptr);
+    }
+  }
+}
+
+void generate_world() {
+  for (int x = -platformSize; x < platformSize; ++x) {
+    for (int z = -platformSize; z < platformSize; ++z) {
+      createNewVoxel(glm::vec3(x, 0, z));
+    }
+  }
 }
 
 void mouse_callback(__attribute__((unused)) GLFWwindow* window, double x,
@@ -92,109 +183,14 @@ void mouse_callback(__attribute__((unused)) GLFWwindow* window, double x,
   camera.front = glm::normalize(camera.direction);
 }
 
-bool checkBlockCollision(glm::vec3 xyz) {
-  bool locationInsideBlock = false;
-  if (cubeCount != 0) {
-    for (int i = 0; i < cubeCount; i++) {
-      if (positions[i] ==
-          glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z))) {
-        locationInsideBlock = true;
-      }
-    }
-  }
-  return locationInsideBlock;
-}
-
-bool checkCameraCollision(glm::vec3 xyz) {
-  bool locationInsideBlock = false;
-  if (cubeCount != 0) {
-    for (int i = 0; i < cubeCount; i++) {
-      if (positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y + 1),
-                                    std::floor(xyz.z)) ||
-          positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y),
-                                    std::floor(xyz.z)) ||
-          positions[i] == glm::vec3(std::floor(xyz.x), std::floor(xyz.y - 1),
-                                    std::floor(xyz.z))) {
-        locationInsideBlock = true;
-      }
-    }
-  }
-  return locationInsideBlock;
-}
-
-void createNewVoxel(glm::vec3 xyz) {
-  if (!checkBlockCollision(xyz)) {
-    cubeCount++;
-    positions[cubeCount - 1] =
-        glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z));
-    // clang-format off
-    GLfloat vertices[48] = {
-        std::floor(xyz.x+1.0f), std::floor(xyz.y+1.0f), std::floor(xyz.z+0.0f), 1.0f, 0.0f, 0.0f,
-        std::floor(xyz.x+1.0f), std::floor(xyz.y+0.0f), std::floor(xyz.z+0.0f), 0.0f, 1.0f, 0.0f,
-        std::floor(xyz.x+0.0f), std::floor(xyz.y+0.0f), std::floor(xyz.z+0.0f), 0.0f, 0.0f, 1.0f,
-        std::floor(xyz.x+0.0f), std::floor(xyz.y+1.0f), std::floor(xyz.z+0.0f), 0.0f, 0.0f, 0.0f,
-        std::floor(xyz.x+1.0f), std::floor(xyz.y+1.0f), std::floor(xyz.z+1.0f), 0.0f, 1.0f, 0.0f,
-        std::floor(xyz.x+0.0f), std::floor(xyz.y+1.0f), std::floor(xyz.z+1.0f), 0.0f, 0.0f, 1.0f,
-        std::floor(xyz.x+1.0f), std::floor(xyz.y+0.0f), std::floor(xyz.z+1.0f), 0.0f, 0.0f, 0.0f,
-        std::floor(xyz.x+0.0f), std::floor(xyz.y+0.0f), std::floor(xyz.z+1.0f), 0.0f, 0.0f, 1.0f
-    };
-    GLint indices[36] = {
-        (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 2,
-        (cubeCount - 1) * 8 + 2, (cubeCount - 1) * 8 + 3, (cubeCount - 1) * 8 + 0,
-        (cubeCount - 1) * 8 + 4, (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 3,
-        (cubeCount - 1) * 8 + 3, (cubeCount - 1) * 8 + 5, (cubeCount - 1) * 8 + 4,
-        (cubeCount - 1) * 8 + 4, (cubeCount - 1) * 8 + 6, (cubeCount - 1) * 8 + 1,
-        (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 0, (cubeCount - 1) * 8 + 4,
-        (cubeCount - 1) * 8 + 5, (cubeCount - 1) * 8 + 7, (cubeCount - 1) * 8 + 6,
-        (cubeCount - 1) * 8 + 6, (cubeCount - 1) * 8 + 4, (cubeCount - 1) * 8 + 5,
-        (cubeCount - 1) * 8 + 3, (cubeCount - 1) * 8 + 2, (cubeCount - 1) * 8 + 7,
-        (cubeCount - 1) * 8 + 7, (cubeCount - 1) * 8 + 5, (cubeCount - 1) * 8 + 3,
-        (cubeCount - 1) * 8 + 1, (cubeCount - 1) * 8 + 6, (cubeCount - 1) * 8 + 7,
-        (cubeCount - 1) * 8 + 7, (cubeCount - 1) * 8 + 2, (cubeCount - 1) * 8 + 1
-    };
-    // clang-format on
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER,
-                    (cubeCount - 1) * 48 * (GLintptr)sizeof(GLfloat),
-                    48 * sizeof(GLfloat), vertices);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
-                    (cubeCount - 1) * 36 * (GLintptr)sizeof(GLint),
-                    36 * sizeof(GLint), indices);
-  }
-}
-
-void deleteVoxel(glm::vec3 xyz) {
-  if (cubeCount != 0) {
-    for (int i = 0; i < cubeCount; i++) {
-      if (positions[i] ==
-          glm::vec3(std::floor(xyz.x), std::floor(xyz.y), std::floor(xyz.z))) {
-        size_t size = sizeof positions / sizeof positions[0];
-        for (size_t ind = i; ind <= size - 1; ind++) {
-          positions[i] = positions[ind + 1];
-        }
-        positions[size - 1] = {};
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glClearBufferSubData(GL_ARRAY_BUFFER, GL_R32F,
-                             i * 48 * (GLintptr)sizeof(GLfloat),
-                             48 * sizeof(GLfloat), GL_RED, GL_FLOAT, nullptr);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glClearBufferSubData(GL_ELEMENT_ARRAY_BUFFER, GL_R32F,
-                             i * 36 * (GLintptr)sizeof(GLfloat),
-                             36 * sizeof(GLfloat), GL_RED, GL_INT, nullptr);
-      }
-    }
-  }
-}
-
 void mouse_button_callback(__attribute__((unused)) GLFWwindow* window,
                            int button, int action,
                            __attribute__((unused)) int mods) {
-  if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-    createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
-  }
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     deleteVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
+  }
+  if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+    createNewVoxel(glm::vec3(camera.xyz.x, camera.xyz.y - 2, camera.xyz.z));
   }
 }
 
@@ -203,45 +199,61 @@ void key_callback(__attribute__((unused)) GLFWwindow* window, int key,
                   __attribute__((unused)) int mods) {
   if (key == GLFW_KEY_SPACE && action == GLFW_PRESS && !camera.flying &&
       !checkCameraCollision(
-          camera.xyz + glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameDelta) &&
+          camera.xyz + glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameTime) &&
       checkCameraCollision(
           glm::vec3(camera.xyz.x, camera.xyz.y - 0.1, camera.xyz.z) +
-          glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameDelta)) {
-    camera.velocity += camera.jumpHeight * camera.up * frameDelta;
+          glm::vec3(0.0f, camera.velocity.y, 0.0f) * frameTime)) {
+    camera.velocity += camera.jumpHeight * camera.up;
   }
+}
+
+void framebuffer_size_callback(__attribute__((unused)) GLFWwindow* window,
+                               int width, int height) {
+  Projection =
+      glm::perspective(glm::radians(camera.fov),
+                       (GLfloat)width / (GLfloat)height, 0.01f, 1000.0f);
+  glViewport(0, 0, width, height);
 }
 
 int main() {
   if (!glfwInit()) {
-    std::cout << "A fatal error has occurred: Unable to initialise GLFW"
-              << std::endl;
+    error("Unable to initialise GLFW");
     return -1;
   }
+
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   auto* mode = (GLFWvidmode*)glfwGetVideoMode(monitor);
+
   glfwWindowHint(GLFW_SAMPLES, 4);
+
   GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "Voxelaria",
                                         monitor, nullptr);
+
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
   if (!window) {
-    std::cout << "A fatal error has occurred: Unable to create GLFW window"
-              << std::endl;
+    error("Unable to create GLFW window");
     glfwTerminate();
     return -1;
   }
+
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
+  glfwSwapInterval(0);
+
   if (glewInit() != GLEW_OK) {
-    std::cout << "A fatal error has occurred: Unable to initialise GLEW"
-              << std::endl;
+    error("Unable to initialise GLEW");
     glfwTerminate();
     return -1;
   }
+
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, 10000000, nullptr, GL_DYNAMIC_DRAW);
+
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                         (GLvoid*)nullptr);
+
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                         (GLvoid*)(3 * sizeof(float)));
@@ -251,8 +263,12 @@ int main() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, 10000000, nullptr, GL_DYNAMIC_DRAW);
 
   glEnable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
+
+  glCullFace(GL_BACK);
+  glFrontFace(GL_CCW);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // clang-format off
@@ -268,21 +284,22 @@ int main() {
   shader = CreateShader(vertexShader, fragmentShader);
   glUseProgram(shader);
 
-  camera.set_xyz(glm::vec3(0.0f, 0.0f, 0.0f));
+  camera.set_xyz(glm::vec3(0.0f, 2.0f, 0.0f));
   camera.set_front(glm::vec3(0.0f, 0.0f, -1.0f));
   camera.set_up(glm::vec3(0.0f, 1.0f, 0.0f));
   camera.set_pitch(0.0);
   camera.set_yaw(-90.0);
   camera.set_fov(90.0f);
-  camera.set_speed(0.00005f);
-  camera.set_smoothing(0.01f);
-  camera.set_jumpHeight(0.001f);
+  camera.set_speed(1.0f * 0.00005);
+  camera.set_smoothing(1.0f * 0.01);
+  camera.set_jumpHeight(1.0f * 0.01);
   camera.enable_flying(false);
 
   mouse.lastX = mode->width / 2.0;
   mouse.lastY = mode->height / 2.0;
   mouse.sensitivity = 0.1f;
   mouse.firstMouse = true;
+
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetKeyCallback(window, key_callback);
   glfwSetCursorPosCallback(window, mouse_callback);
@@ -290,9 +307,6 @@ int main() {
 
   glm::mat4 Model = glm::mat4(1.0f);
   glm::mat4 View = glm::mat4(1.0f);
-  glm::mat4 Projection = glm::perspective(
-      glm::radians(camera.fov), (GLfloat)mode->width / (GLfloat)mode->height,
-      0.01f, 1000.0f);
 
   GLint model_location = glGetUniformLocation(shader, "model");
   GLint view_location = glGetUniformLocation(shader, "view");
@@ -300,10 +314,10 @@ int main() {
 
   std::chrono::high_resolution_clock::time_point t1, t2;
 
-  createNewVoxel(glm::vec3(0.0f, 0.0f, 0.0f));
+  generate_world();
 
   while (!glfwWindowShouldClose(window)) {
-    frameDelta = std::chrono::duration<float, std::milli>(t2 - t1).count();
+    frameTime = std::chrono::duration<float, std::milli>(t2 - t1).count();
     t1 = std::chrono::high_resolution_clock::now();
 
     glfwPollEvents();
@@ -313,65 +327,57 @@ int main() {
     }
     if (glfwGetKey(window, GLFW_KEY_A)) {
       camera.velocity -= glm::normalize(glm::cross(camera.front, camera.up)) *
-                         camera.speed * frameDelta;
+                         camera.speed * frameTime;
     }
     if (glfwGetKey(window, GLFW_KEY_D)) {
       camera.velocity += glm::normalize(glm::cross(camera.front, camera.up)) *
-                         camera.speed * frameDelta;
+                         camera.speed * frameTime;
     }
     if (glfwGetKey(window, GLFW_KEY_S)) {
       camera.velocity -= glm::vec3(cos(glm::radians(camera.yaw)), 0.0f,
                                    sin(glm::radians(camera.yaw))) *
-                         glm::vec3(1.0f, 0.0f, 1.0f) * camera.speed *
-                         frameDelta;
+                         glm::vec3(1.0f, 0.0f, 1.0f) * camera.speed * frameTime;
     }
     if (glfwGetKey(window, GLFW_KEY_W)) {
       camera.velocity += glm::vec3(cos(glm::radians(camera.yaw)), 0.0f,
                                    sin(glm::radians(camera.yaw))) *
-                         glm::vec3(1.0f, 0.0f, 1.0f) * camera.speed *
-                         frameDelta;
+                         glm::vec3(1.0f, 0.0f, 1.0f) * camera.speed * frameTime;
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) && camera.flying) {
-      camera.velocity +=
-          glm::vec3(0.0f, 1.0f, 0.0f) * camera.speed * frameDelta;
+      camera.velocity += glm::vec3(0.0f, 1.0f, 0.0f) * camera.speed * frameTime;
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) && camera.flying) {
-      camera.velocity -=
-          glm::vec3(0.0f, 1.0f, 0.0f) * camera.speed * frameDelta;
+      camera.velocity -= glm::vec3(0.0f, 1.0f, 0.0f) * camera.speed * frameTime;
     }
 
     if (!camera.flying) {
-      camera.velocity -=
-          glm::vec3(camera.velocity.x * camera.smoothing * frameDelta,
-                    gravity * frameDelta,
-                    camera.velocity.z * camera.smoothing * frameDelta);
+      camera.velocity -= glm::vec3(
+          camera.velocity.x * camera.smoothing * frameTime, gravity * frameTime,
+          camera.velocity.z * camera.smoothing * frameTime);
     } else {
-      camera.velocity -=
-          glm::vec3(camera.velocity.x * camera.smoothing * frameDelta,
-                    camera.velocity.y * camera.smoothing * frameDelta,
-                    camera.velocity.z * camera.smoothing * frameDelta);
+      camera.velocity -= camera.velocity * camera.smoothing * frameTime;
     }
 
     if (checkCameraCollision(camera.xyz +
                              glm::vec3(camera.velocity.x, 0.0f, 0.0f) *
-                                 frameDelta)) {
+                                 frameTime)) {
       camera.velocity *= glm::vec3(0.0f, 1.0f, 1.0f);
     }
     if (checkCameraCollision(camera.xyz +
                              glm::vec3(0.0f, camera.velocity.y, 0.0f) *
-                                 frameDelta)) {
+                                 frameTime)) {
       camera.velocity *= glm::vec3(1.0f, 0.0f, 1.0f);
     }
     if (checkCameraCollision(camera.xyz +
                              glm::vec3(0.0f, 0.0f, camera.velocity.z) *
-                                 frameDelta)) {
+                                 frameTime)) {
       camera.velocity *= glm::vec3(1.0f, 1.0f, 0.0f);
     }
-    if (checkCameraCollision(camera.xyz + camera.velocity * frameDelta)) {
+    if (checkCameraCollision(camera.xyz + camera.velocity * frameTime)) {
       camera.velocity.y += 0.01f;
     }
 
-    camera.xyz += camera.velocity * frameDelta;
+    camera.xyz += camera.velocity * frameTime;
 
     View = glm::lookAt(camera.xyz, camera.xyz + camera.front, camera.up);
 

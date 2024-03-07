@@ -6,7 +6,8 @@ project('Voxelaria', 'cpp',
     'optimization=3',
     'strip=true',
     'warning_level=3',
-    'werror=true'
+    'werror=true',
+    'cpp_std=c++20'
   ])
 
 subdir('src')
